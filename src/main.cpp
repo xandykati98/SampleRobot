@@ -6,6 +6,7 @@
 #include "Wallfollowerthread.h"
 #include "Sonarthread.h"
 #include "Laserthread.h"
+#include "NeuralNetwork.h"
 
 PioneerRobot *robo;
 
@@ -15,8 +16,19 @@ int main(int argc, char **argv)
 
     robo = new PioneerRobot(ConexaoSimulacao, "", &sucesso);
 
+    // Load neural network if available
+    NeuralNetwork *neuralNetwork = new NeuralNetwork();
+    bool nnLoaded = neuralNetwork->loadFromJson("weights.json");
+    
+    if (!nnLoaded)
+    {
+        ArLog::log(ArLog::Normal, "Neural network not loaded, will use rule-based control");
+        delete neuralNetwork;
+        neuralNetwork = nullptr;
+    }
+
     ArLog::log(ArLog::Normal, "Criando as theads...");
-    ColisionAvoidanceThread colisionAvoidanceThread(robo);
+    ColisionAvoidanceThread colisionAvoidanceThread(robo, neuralNetwork);
     // WallFollowerThread wallFollowerThread(robo);
     SonarThread sonarReadingThread(robo);
     // LaserThread laserReadingThread(robo);
@@ -34,6 +46,11 @@ int main(int argc, char **argv)
     // wallFollowerThread.runAsync();
 
     robo->robot.waitForRunExit();
+
+    if (neuralNetwork != nullptr)
+    {
+        delete neuralNetwork;
+    }
 
     Aria::exit(0);
 }

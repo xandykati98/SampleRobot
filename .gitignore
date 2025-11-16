@@ -1,3 +1,9 @@
+/python_training/__pycache__
+/python_training/bin
+/python_training/lib
+/build/
+/mlruns
+
 # Prerequisites
 *.d
 

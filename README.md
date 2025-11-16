@@ -18,8 +18,30 @@ chmod +x ./build/main
 # Run
 ./build/main
   
-# Detele the build
+# Delete the build
 make clean
+
+# =============== Neural Network Training ===============
+
+# Python setup (for training):
+cd python_training
+pip install -r requirements.txt
+
+# Train with Reinforcement Learning (RECOMMENDED):
+py train_rl.py
+py export_weights_rl.py
+
+# OR Train with Evolutionary Algorithm:
+py train.py
+py export_weights.py
+
+# Copy weights to project root:
+cp weights.json ..
+
+# Rebuild and run with neural network:
+cd ..
+make clean && make
+./build/main
 
 # =============== Windows ===============
 

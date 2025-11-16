@@ -2,6 +2,7 @@
 #define COLISIONAVOIDANCETHREAD_H
 #include "Aria.h"
 #include "ClassRobo.h"
+#include "NeuralNetwork.h"
 
 class ColisionAvoidanceThread : public ArASyncTask
 {
@@ -10,14 +11,17 @@ public:
     ArCondition myCondition;
     ArMutex myMutex;
     int sonar[8];
+    NeuralNetwork *neuralNetwork;
+    bool useNeuralNetwork;
 
 public:
-    ColisionAvoidanceThread(PioneerRobot *_robo);
+    ColisionAvoidanceThread(PioneerRobot *_robo, NeuralNetwork *nn);
     void *runThread(void *);
     void waitOnCondition();
     void lockMutex();
     void unlockMutex();
     void tratamentoSimples();
+    void tratamentoNeuralNetwork();
 };
 
 #endif // COLISIONAVOIDANCETHREAD_H

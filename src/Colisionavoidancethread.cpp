@@ -9,6 +9,7 @@ ColisionAvoidanceThread::ColisionAvoidanceThread(PioneerRobot *_robo, NeuralNetw
       this->robo = _robo;
       this->neuralNetwork = nn;
       this->useNeuralNetwork = (nn != nullptr && nn->isLoaded());
+      this->last_action = 0;  // Initialize to forward action
       
       if (this->useNeuralNetwork)
       {
@@ -109,50 +110,46 @@ void ColisionAvoidanceThread::tratamentoNeuralNetwork()
             sonar_input[i] = static_cast<double>(sonar[i]);
       }
       
+      // Get action from neural network (0=forward, 1=correct_left, 2=correct_right)
+      int action = neuralNetwork->getAction(sonar_input, last_action);
+      
+      // Store action for next iteration
+      last_action = action;
+      
+      // Apply discrete action
+      const double FORWARD_VEL = 150.0;  // Base forward velocity (mm/s)
+      const double TURN_VEL_DIFF = 50.0;  // Velocity difference for turning
+      
       double left_vel, right_vel;
-      neuralNetwork->forward(sonar_input, left_vel, right_vel);
       
-      // Log raw predictions
-      double raw_left = left_vel;
-      double raw_right = right_vel;
-      
-      // Prevent spinning: constrain velocities to prevent excessive turning
-      const double MAX_VEL_DIFF = 50.0;      // Maximum difference between left/right (mm/s) to prevent spinning
-      const double MIN_VEL_THRESHOLD = 10.0; // Below this, treat as stopped
-      
-      // Ensure both velocities are positive (forward movement only)
-      if (left_vel < 0) left_vel = 0;
-      if (right_vel < 0) right_vel = 0;
-      
-      // Limit the difference between left and right to prevent spinning
-      double vel_diff = right_vel - left_vel;
-      if (std::abs(vel_diff) > MAX_VEL_DIFF) {
-            // Clamp the difference to prevent excessive turning
-            double avg_vel = (left_vel + right_vel) / 2.0;
-            left_vel = avg_vel - MAX_VEL_DIFF / 2.0;
-            right_vel = avg_vel + MAX_VEL_DIFF / 2.0;
-            
-            // Ensure still positive
-            if (left_vel < 0) {
-                  left_vel = 0;
-                  right_vel = MAX_VEL_DIFF;
-            }
-            if (right_vel < 0) {
-                  right_vel = 0;
-                  left_vel = MAX_VEL_DIFF;
-            }
+      if (action == 0) {  // Forward
+            left_vel = FORWARD_VEL;
+            right_vel = FORWARD_VEL;
+            std::cout << "Action: FORWARD";
       }
-      
-      // If both velocities are very low, stop completely (avoid slow drift)
-      if (left_vel < MIN_VEL_THRESHOLD && right_vel < MIN_VEL_THRESHOLD) {
-            left_vel = 0;
-            right_vel = 0;
+      else if (action == 1) {  // Correct left
+            left_vel = FORWARD_VEL - TURN_VEL_DIFF;
+            right_vel = FORWARD_VEL + TURN_VEL_DIFF;
+            std::cout << "Action: CORRECT_LEFT";
+      }
+      else if (action == 2) {  // Correct right
+            left_vel = FORWARD_VEL + TURN_VEL_DIFF;
+            right_vel = FORWARD_VEL - TURN_VEL_DIFF;
+            std::cout << "Action: CORRECT_RIGHT";
+      }
+      else {  // Default to forward
+            left_vel = FORWARD_VEL;
+            right_vel = FORWARD_VEL;
+            std::cout << "Action: DEFAULT_FORWARD";
       }
       
       robo->Move(left_vel, right_vel);
       
-      // Always log to debug - show raw predictions and constrained values
-      std::cout << "NN Raw: L=" << raw_left << " R=" << raw_right 
-                << " | Constrained: L=" << left_vel << " R=" << right_vel
-                << " | Sonar[0]=" << sonar_input[0] << std::endl;
+      // Log action and velocities
+      std::cout << " | L=" << left_vel << " R=" << right_vel
+                << " | [0]=" << sonar_input[0]
+                << " | [1]=" << sonar_input[1]
+                << " | [2]=" << sonar_input[2]
+                << " | [3]=" << sonar_input[3]
+                << " | [4]=" << sonar_input[4] << std::endl;
 }

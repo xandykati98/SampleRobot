@@ -21,7 +21,9 @@ public:
     NeuralNetwork();
     bool loadFromJson(const std::string &filepath);
     void forward(const std::vector<double> &input, double &left_vel, double &right_vel);
+    int getAction(const std::vector<double> &input, int last_action);
     bool isLoaded() const;
+    double getMaxVelocity() const;
 };
 
 #endif // NEURALNETWORK_H

@@ -59,7 +59,7 @@ class Obstacle:
 class Robot:
     # Sonar angles matching C++ layout: [90°, 50°, 30°, 10°, -10°, -30°, -50°, -90°]
     SONAR_ANGLES = [90, 50, 30, 10, -10, -30, -50, -90]
-    MAX_SONAR_RANGE = 5000.0  # LIMITELEITURA from Config.h
+    MAX_SONAR_RANGE = 500.0  # Adjusted for simulator scale (C++ uses 5000mm in real world)
     ROBOT_RADIUS = 20.0
     
     def __init__(self, x: float, y: float, theta: float, max_velocity: float = 400.0):
@@ -78,11 +78,33 @@ class Robot:
         self.visited_positions = set()
         self.grid_size = 100  # Grid cell size for position tracking
         
-    def update(self, left_vel: float, right_vel: float, dt: float, world):
+        self.last_action = 0  # Track last action (0=forward, 1=left, 2=right)
+        
+    def update(self, action: int, dt: float, world):
         if not self.alive:
             return
         
-        # Clamp velocities to prevent teleportation and enforce forward-only movement
+        # Store the action for next iteration
+        self.last_action = action
+        
+        # Apply discrete action: 0=forward, 1=correct_left, 2=correct_right
+        FORWARD_VEL = 150.0  # Base forward velocity (mm/s)
+        TURN_VEL_DIFF = 50.0  # Velocity difference for turning
+        
+        if action == 0:  # Forward
+            left_vel = FORWARD_VEL
+            right_vel = FORWARD_VEL
+        elif action == 1:  # Correct left
+            left_vel = FORWARD_VEL - TURN_VEL_DIFF
+            right_vel = FORWARD_VEL + TURN_VEL_DIFF
+        elif action == 2:  # Correct right
+            left_vel = FORWARD_VEL + TURN_VEL_DIFF
+            right_vel = FORWARD_VEL - TURN_VEL_DIFF
+        else:
+            left_vel = FORWARD_VEL
+            right_vel = FORWARD_VEL
+        
+        # Clamp velocities to prevent teleportation
         left_vel = np.clip(left_vel, 0.0, self.max_velocity)
         right_vel = np.clip(right_vel, 0.0, self.max_velocity)
         
@@ -226,7 +248,7 @@ class Robot:
     
     def get_normalized_sonar(self) -> np.ndarray:
         # Normalize sonar readings to [0, 1]
-        return np.array(self.sonar_readings) / (self.MAX_SONAR_RANGE // 4)
+        return np.array(self.sonar_readings) / self.MAX_SONAR_RANGE
     
     def calculate_fitness(self) -> float:
         # Calculate distance from start position

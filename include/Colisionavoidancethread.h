@@ -13,6 +13,7 @@ public:
     int sonar[8];
     NeuralNetwork *neuralNetwork;
     bool useNeuralNetwork;
+    int last_action;  // Track last action (0=forward, 1=left, 2=right)
 
 public:
     ColisionAvoidanceThread(PioneerRobot *_robo, NeuralNetwork *nn);

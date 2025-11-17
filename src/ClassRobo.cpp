@@ -204,3 +204,7 @@ void PioneerRobot::Move(double vl, double vr)
 {
   robot.setVel2(vl, vr);
 }
+void PioneerRobot::setVel(int velocidade)
+{
+  robot.setVel(velocidade);
+}

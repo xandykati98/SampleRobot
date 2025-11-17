@@ -15,7 +15,7 @@ from visualization import Visualizer
 class Trainer:
     def __init__(self, num_generations: int = 100, episode_duration: float = 30.0, 
                  max_velocity: float = 300.0, visualize: bool = True, 
-                 vis_update_freq: int = 5, num_obstacles: int = 45):
+                 vis_update_freq: int = 5, num_obstacles: int = 350):
         self.num_generations = num_generations
         self.episode_duration = episode_duration  # seconds
         self.dt = 0.05  # 50ms timestep
@@ -25,13 +25,13 @@ class Trainer:
         self.vis_update_freq = vis_update_freq  # Update visualization every N frames
         
         # Create world
-        self.world = World(width=2000, height=2000, num_obstacles=num_obstacles)
+        self.world = World(width=10000, height=10000, num_obstacles=num_obstacles)
         
         # Create visualizer (only if visualization is enabled)
         self.visualizer = Visualizer(self.world, scale=0.35) if visualize else None
         
         # Create evolutionary algorithm
-        self.evolution = EvolutionaryAlgorithm(population_size=40, max_velocity=max_velocity)
+        self.evolution = EvolutionaryAlgorithm(population_size=12, max_velocity=max_velocity)
         
         self.best_fitness_history = []
         self.frame_count = 0
@@ -58,10 +58,10 @@ class Trainer:
                     
                     # Get action from neural network
                     sonar_normalized = robot.get_normalized_sonar()
-                    left_vel, right_vel = models[i].get_action(sonar_normalized)
+                    action = models[i].get_action(sonar_normalized, robot.last_action)
                     
                     # Update robot
-                    robot.update(left_vel, right_vel, self.dt, self.world)
+                    robot.update(action, self.dt, self.world)
                     
                     # Update fitness
                     robot.calculate_fitness()
@@ -203,7 +203,7 @@ def main():
     # visualize=True, vis_update_freq=1: Full visualization (slower, for debugging)
     
     trainer = Trainer(
-        num_generations=100, 
+        num_generations=20, 
         episode_duration=90.0, 
         max_velocity=300.0,
         visualize=False,  # Set to True to enable visualization

@@ -45,6 +45,3 @@
 
 # debug information files
 *.dwo
-
-# removing configs
-*.json

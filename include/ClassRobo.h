@@ -46,6 +46,7 @@ public:
   void Rotaciona(double degrees, int Sentido, int velocidade);
   void getAllSonar(int *sensores);
   void Move(double vl, double vr);
+  void setVel(int velocidade);
   void getLaser();
   void getWriteLaserReadings();
   void RunExit();

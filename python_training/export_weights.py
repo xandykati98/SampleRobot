@@ -10,7 +10,8 @@ def export_model_to_json(model: RobotNet, output_path: str):
     
     Format:
     {
-        "architecture": [8, 32, 32, 2],
+        "architecture": [11, 32, 32, 3],
+        "max_velocity": 300.0,
         "layers": [
             {
                 "weights": [[...], [...], ...],
@@ -19,6 +20,11 @@ def export_model_to_json(model: RobotNet, output_path: str):
             ...
         ]
     }
+    
+    Architecture:
+    - Input: 11 (8 sonar readings + 3 one-hot encoded last action)
+    - Hidden: 32 neurons x 2 layers
+    - Output: 3 actions (forward, correct_left, correct_right)
     """
     
     model.eval()
@@ -55,6 +61,7 @@ def export_model_to_json(model: RobotNet, output_path: str):
     # Create output dictionary
     output = {
         "architecture": architecture,
+        "max_velocity": model.max_velocity,
         "layers": layers
     }
     
@@ -64,6 +71,7 @@ def export_model_to_json(model: RobotNet, output_path: str):
     
     print(f"Model exported to {output_path}")
     print(f"Architecture: {architecture}")
+    print(f"Max velocity: {model.max_velocity}")
 
 
 def main():
@@ -84,11 +92,21 @@ def main():
     
     # Test the model with sample input
     print("\nTesting model with sample input:")
-    sample_input = torch.FloatTensor([[0.5, 0.6, 0.7, 0.8, 0.8, 0.7, 0.6, 0.5]])
+    # Input: 8 sonar readings + 3 one-hot encoded last action (action=0, forward)
+    sample_sonar = [0.5, 0.6, 0.7, 0.8, 0.8, 0.7, 0.6, 0.5]
+    sample_last_action = [1.0, 0.0, 0.0]  # One-hot: forward=1, left=0, right=0
+    sample_input = torch.FloatTensor([sample_sonar + sample_last_action])
+    
     with torch.no_grad():
         output = model(sample_input)
-    print(f"Input: {sample_input.numpy()}")
-    print(f"Output (left_vel, right_vel): {output.numpy()}")
+    
+    action = torch.argmax(output, dim=1).item()
+    action_names = ["FORWARD", "CORRECT_LEFT", "CORRECT_RIGHT"]
+    
+    print(f"Input sonar: {sample_sonar}")
+    print(f"Last action: FORWARD (one-hot: {sample_last_action})")
+    print(f"Output logits: {output.numpy()}")
+    print(f"Predicted action: {action} ({action_names[action]})")
 
 
 if __name__ == "__main__":

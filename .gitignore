@@ -3,6 +3,7 @@
 /python_training/lib
 /build/
 /mlruns
+mlruns
 
 # Prerequisites
 *.d

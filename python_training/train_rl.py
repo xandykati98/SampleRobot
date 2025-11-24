@@ -68,10 +68,9 @@ class RLTrainer:
                     
                     # Get action from policy
                     action, log_prob, value = self.model.get_action(state, deterministic=False)
-                    left_vel, right_vel = action
                     
                     # Execute action
-                    robot.update(left_vel, right_vel, self.dt, self.world)
+                    robot.update(action, self.dt, self.world)
                     robot.update_sonar(self.world)
                     
                     # Calculate reward

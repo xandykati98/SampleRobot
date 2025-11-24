@@ -80,29 +80,34 @@ class Robot:
         
         self.last_action = 0  # Track last action (0=forward, 1=left, 2=right)
         
-    def update(self, action: int, dt: float, world):
+    def update(self, action, dt: float, world):
         if not self.alive:
             return
         
-        # Store the action for next iteration
-        self.last_action = action
-        
-        # Apply discrete action: 0=forward, 1=correct_left, 2=correct_right
-        FORWARD_VEL = 150.0  # Base forward velocity (mm/s)
-        TURN_VEL_DIFF = 50.0  # Velocity difference for turning
-        
-        if action == 0:  # Forward
-            left_vel = FORWARD_VEL
-            right_vel = FORWARD_VEL
-        elif action == 1:  # Correct left
-            left_vel = FORWARD_VEL - TURN_VEL_DIFF
-            right_vel = FORWARD_VEL + TURN_VEL_DIFF
-        elif action == 2:  # Correct right
-            left_vel = FORWARD_VEL + TURN_VEL_DIFF
-            right_vel = FORWARD_VEL - TURN_VEL_DIFF
+        # Handle both discrete (int) and continuous (tuple/array) actions
+        if isinstance(action, (tuple, list, np.ndarray)):
+            # Continuous action: (left_vel, right_vel)
+            left_vel, right_vel = action
+            self.last_action = 0  # Not used for continuous actions
         else:
-            left_vel = FORWARD_VEL
-            right_vel = FORWARD_VEL
+            # Discrete action: 0=forward, 1=correct_left, 2=correct_right
+            self.last_action = action
+            
+            FORWARD_VEL = 150.0  # Base forward velocity (mm/s)
+            TURN_VEL_DIFF = 50.0  # Velocity difference for turning
+            
+            if action == 0:  # Forward
+                left_vel = FORWARD_VEL
+                right_vel = FORWARD_VEL
+            elif action == 1:  # Correct left
+                left_vel = FORWARD_VEL - TURN_VEL_DIFF
+                right_vel = FORWARD_VEL + TURN_VEL_DIFF
+            elif action == 2:  # Correct right
+                left_vel = FORWARD_VEL + TURN_VEL_DIFF
+                right_vel = FORWARD_VEL - TURN_VEL_DIFF
+            else:
+                left_vel = FORWARD_VEL
+                right_vel = FORWARD_VEL
         
         # Clamp velocities to prevent teleportation
         left_vel = np.clip(left_vel, 0.0, self.max_velocity)

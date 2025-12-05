@@ -333,13 +333,15 @@ class World:
         self.obstacles = []
         
         for _ in range(num_obstacles):
-            # Random obstacle size and position
-            w = np.random.uniform(50, 200)
-            h = np.random.uniform(50, 200)
+            # Random obstacle size and position (larger obstacles)
+            w = np.random.uniform(100, 400)
+            h = np.random.uniform(100, 400)
             x = np.random.uniform(0, self.width - w)
             y = np.random.uniform(0, self.height - h)
             
-            # Avoid placing obstacles at the center start position
-            if not (800 < x < 1200 and 800 < y < 1200):
+            # Avoid placing obstacles at the center start position (adjusted for larger world)
+            center_x = self.width // 2
+            center_y = self.height // 2
+            if not (center_x - 400 < x < center_x + 400 and center_y - 400 < y < center_y + 400):
                 self.obstacles.append(Obstacle(x, y, w, h))
 
